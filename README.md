@@ -4,6 +4,8 @@ A free, unlimited chess game review that runs **entirely in your browser**: past
 chess.com or lichess and **Stockfish 18** (WebAssembly) analyses every move locally. There is no
 server, no account and no daily limit.
 
+![Chess Analysis Board: game review with move classification and Stockfish lines](docs/screenshot.png)
+
 > The interface is in Romanian (*Tabla de Analiză*). An English UI is planned.
 
 ## What it does
