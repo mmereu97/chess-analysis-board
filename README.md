@@ -24,6 +24,7 @@ server, no account and no daily limit.
   navigation (← →) and explanations of what each player should have played.
 - **Variations:** play your own moves from any position and go back to the game.
 - **PGNs with several games:** pick the one to analyse.
+- **Position editor:** place the pieces by hand or paste a FEN, set the side to move and castling rights, then analyse the position or play it against the bot.
 - **Copy FEN** of any position; the last game is remembered between visits (localStorage).
 - Light and dark theme, following the system setting.
 
@@ -49,7 +50,7 @@ It also runs as a static site (for example on GitHub Pages), because everything 
 | File | What it is |
 |---|---|
 | `index.html` | the complete app: board, move list, analysis (piece images inlined) |
-| `sursa-pagina.html` | the same page without the inlined piece images, easier to read and edit |
+| `sursa-pagina.html` | the same page without the inlined piece images and opening database, easier to read (it runs, but without opening names and the explorer) |
 | `piese.css` | the piece images (cburnett set) |
 | `stockfish.js`, `stockfish.wasm` | Stockfish 18 engine, lite single-threaded build |
 | `chess.js` | chess rules and PGN parsing (chess.js 1.4.0) |
