@@ -4,15 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Tabla de Analiză</title>
-<meta name="description" content="Free, unlimited chess game review in your browser: paste a game and Stockfish 18 analyses every move locally. No server, no account.">
-<meta property="og:title" content="Chess Analysis Board">
-<meta property="og:description" content="Free, unlimited chess game review in your browser: paste a game and Stockfish 18 analyses every move locally. No server, no account.">
-<meta property="og:image" content="https://mmereu97.github.io/chess-analysis-board/docs/screenshot.png">
-<meta property="og:image:width" content="2206">
-<meta property="og:image:height" content="1231">
-<meta property="og:url" content="https://mmereu97.github.io/chess-analysis-board/">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -291,6 +282,19 @@ button{cursor:pointer}
 .rep .g.risky{border-color:var(--c-inacc);color:var(--c-inacc)}
 .rep .g.later{color:var(--muted)}
 .rep .plan{font-size:13px}
+.edgrid{display:grid;grid-template-columns:minmax(260px,440px) minmax(0,1fr);gap:18px;align-items:start}
+.edside{display:flex;flex-direction:column;gap:12px}
+.edb .sq{position:relative}
+.edpal{display:flex;gap:4px;margin:6px 0;flex-wrap:wrap}
+.edt{width:44px;height:44px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);position:relative;padding:0}
+.edt .pc{position:absolute;inset:3px}
+.edt.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.edt.er{font-size:18px;color:var(--c-blun);font-weight:700}
+.edcas{display:flex;flex-wrap:wrap;gap:10px;font-weight:500;font-size:13px}
+.edcas label{display:flex;gap:5px;align-items:center} .edcas label.dis{opacity:.45}
+.edfen{font:12.5px var(--fm);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%}
+#edAnalyze:disabled,#edPlay:disabled{opacity:.45;cursor:not-allowed}
+@media (max-width:760px){.edgrid{grid-template-columns:1fr}.edt{width:38px;height:38px}}
 .pct .gr{display:block;font:600 11.5px var(--ff);color:var(--muted);text-align:right;white-space:nowrap}
 #bestTxt .near{font-size:12.5px;font-weight:500;color:var(--muted)} #bestTxt .near b{color:var(--arrow)}
 .pv.nearpv .e{box-shadow:inset 3px 0 0 var(--arrow)}
@@ -564,6 +568,7 @@ i.bk{display:inline-block;width:16px;height:16px;border-radius:50%;flex:none;bac
     <p class="note" id="freeTxt" hidden style="margin:0">Tabla de la poziția de start, fără bot: muți tu pentru ambele părți, iar motorul, săgețile, momelile și strategia te ajută la fiecare pas. Mutările formează partida, pe care o poți analiza, salva și continua oricând. Culoarea aleasă e doar partea de jos a tablei.</p>
     <label class="train" style="margin:0" id="lblHelp"><input type="checkbox" id="botHelp" checked> Ajutor în timpul jocului: best move, săgeți, evaluare, sfaturi de strategie și o explicație pentru fiecare mutare a ta. Îl poți ascunde oricând.</label>
     <div class="row">
+      <button class="btn" id="botEditor" style="margin-right:auto" title="Pune piesele cu mâna și construiește-ți propriul puzzle">Construiește o poziție…</button>
       <button class="btn" id="botCancel">Anulează</button>
       <button class="btn pri" id="botStart">Începe partida</button>
     </div>
@@ -578,6 +583,41 @@ i.bk{display:inline-block;width:16px;height:16px;border-radius:50%;flex:none;bac
       <button class="btn" id="rmClose" style="margin-left:auto">Închide</button>
     </div>
     <div id="rmBody"></div>
+  </div>
+</div>
+<div class="modal" id="edModal" hidden>
+  <div class="dlg wide" role="dialog" aria-labelledby="edT">
+    <div class="rmh"><h2 id="edT">Construiește o poziție</h2><button class="btn" id="edClose" style="margin-left:auto">Închide</button></div>
+    <div class="edgrid">
+      <div>
+        <div class="edpal" id="edPalB"></div>
+        <div id="edBoard"></div>
+        <div class="edpal" id="edPalW"></div>
+      </div>
+      <div class="edside">
+        <p class="note" style="margin:0">Alege o piesă de sus sau de jos, apoi dă click pe pătrate ca s-o pui. Click pe o piesă de pe tablă cu aceeași piesă aleasă o scoate. Cu radiera scoți orice piesă. Click dreapta pe un pătrat îl golește.</p>
+        <div class="fld">La mutare
+          <div class="seg"><label><input type="radio" name="edTurn" value="w" checked><span>Albul</span></label><label><input type="radio" name="edTurn" value="b"><span>Negrul</span></label></div>
+        </div>
+        <div class="fld">Rocade încă posibile
+          <div class="edcas" id="edCas"></div>
+        </div>
+        <div class="row" style="justify-content:flex-start">
+          <button class="btn" id="edStart">Poziția de start</button>
+          <button class="btn" id="edClear">Golește tabla</button>
+          <button class="btn" id="edFlip">Întoarce tabla</button>
+        </div>
+        <label class="fld" for="edFen">FEN (poți lipi și unul copiat de pe lichess sau chess.com)
+          <input id="edFen" class="edfen" spellcheck="false">
+        </label>
+        <p class="err" id="edErr" hidden></p>
+        <div class="row" style="justify-content:flex-start">
+          <button class="btn pri" id="edAnalyze">Analizează poziția</button>
+          <button class="btn" id="edPlay">Joacă de aici contra botului</button>
+        </div>
+        <p class="note" style="margin:0">„Analizează” deschide poziția ca studiu liber: muți tu pentru ambele părți, cu motorul și momelile la fiecare pas. „Joacă” te pune să muți cu partea de la mutare, iar botul răspunde.</p>
+      </div>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -917,7 +957,7 @@ $("bPrev").onclick = () => step(-1);
 $("bNext").onclick = () => step(1);
 $("bFlip").onclick = () => { S.flip = !S.flip; buildBoard(); update(); };
 document.addEventListener("keydown", e => {
-  if (e.target.closest("textarea,input,select") || !$("modal").hidden || !$("botModal").hidden || !$("repModal").hidden) return;
+  if (e.target.closest("textarea,input,select") || !$("modal").hidden || !$("botModal").hidden || !$("repModal").hidden || !$("edModal").hidden) return;
   if (e.key === "ArrowLeft"){ step(-1); e.preventDefault(); }
   else if (e.key === "ArrowRight"){ step(1); e.preventDefault(); }
   else if (e.key === "ArrowUp"){ go(0); e.preventDefault(); }
@@ -2289,6 +2329,105 @@ function renderExplorer(){
     loadGame(g, false); go(g.fens.length - 1); setTab("open");
   };
 }
+
+/* ---------- position editor: put the pieces on by hand ---------- */
+const ED = {g:{}, tool:"wq", flip:false, turn:"w", cas:{K:true, Q:true, k:true, q:true}};
+const ED_TOOLS = ["k", "q", "r", "b", "n", "p"];
+function edFromFen(fen){
+  const c = new Chess(fen); ED.g = grid(fen); ED.turn = c.turn();
+  const cr = fen.split(" ")[2]; ED.cas = {K:cr.includes("K"), Q:cr.includes("Q"), k:cr.includes("k"), q:cr.includes("q")};
+}
+function edCasOk(){
+  const at = (q, c, t) => ED.g[q] && ED.g[q].color === c && ED.g[q].type === t;
+  return {K: at("e1", "w", "k") && at("h1", "w", "r"), Q: at("e1", "w", "k") && at("a1", "w", "r"), k: at("e8", "b", "k") && at("h8", "b", "r"), q: at("e8", "b", "k") && at("a8", "b", "r")};
+}
+function edFen(){
+  let rows = [];
+  for (let r = 8; r >= 1; r--){
+    let row = "", e = 0;
+    for (const f of FILES){ const p = ED.g[f + r]; if (!p){ e++; continue; } if (e){ row += e; e = 0; } row += p.color === "w" ? p.type.toUpperCase() : p.type; }
+    if (e) row += e; rows.push(row);
+  }
+  const ok = edCasOk(), cas = ["K", "Q", "k", "q"].filter(k => ED.cas[k] && ok[k]).join("") || "-";
+  return `${rows.join("/")} ${ED.turn} ${cas} - 0 1`;
+}
+/* what would make the position illegal, in plain words */
+function edProblem(fen){
+  const kinds = c => Object.values(ED.g).filter(p => p.color === c && p.type === "k").length;
+  if (kinds("w") !== 1) return "Albul trebuie să aibă exact un rege.";
+  if (kinds("b") !== 1) return "Negrul trebuie să aibă exact un rege.";
+  if (Object.keys(ED.g).some(q => ED.g[q].type === "p" && (q[1] === "1" || q[1] === "8"))) return "Pionii nu pot sta pe prima sau pe ultima linie.";
+  for (const c of ["w", "b"]){ const n = Object.values(ED.g).filter(p => p.color === c && p.type === "p").length; if (n > 8) return `${c === "w" ? "Albul" : "Negrul"} are mai mult de 8 pioni.`; }
+  try {
+    const other = fen.replace(/ [wb] /, ED.turn === "w" ? " b " : " w ");
+    if (new Chess(other).inCheck()) return `Regele ${ED.turn === "w" ? "negru" : "alb"} e în șah, dar e rândul ${ED.turn === "w" ? "albului" : "negrului"}: poziția nu poate apărea într-o partidă. Schimbă cine e la mutare.`;
+    new Chess(fen);
+  } catch (e) { return "Poziția nu e validă: " + (e.message || e); }
+  return null;
+}
+function renderEditor(){
+  const fen = edFen(), prob = edProblem(fen);
+  const pal = c => ED_TOOLS.map(t => `<button class="edt ${ED.tool === c + t ? "on" : ""}" data-t="${c + t}" title="${cap1(NAME[t])} ${c === "w" ? "alb" : "negru"}"><div class="pc ${c}${t}"></div></button>`).join("")
+    + (c === "w" ? `<button class="edt er ${ED.tool === "x" ? "on" : ""}" data-t="x" title="Radieră: scoate piesa">✕</button>` : "");
+  $(ED.flip ? "edPalW" : "edPalB").innerHTML = pal("b");
+  $(ED.flip ? "edPalB" : "edPalW").innerHTML = pal("w");
+  // the board: same squares and pieces as the main board
+  const cells = [];
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++){
+    const file = ED.flip ? 7 - f : f, rank = ED.flip ? r + 1 : 8 - r, sq = FILES[file] + rank, p = ED.g[sq];
+    let co = ""; if (f === 0) co += `<span class="coord rk">${rank}</span>`; if (r === 7) co += `<span class="coord fl">${FILES[file]}</span>`;
+    cells.push(`<div class="sq ${(file + rank) % 2 === 0 ? "l" : "d"}" data-sq="${sq}">${co}${p ? `<div class="pc ${p.color}${p.type}"></div>` : ""}</div>`);
+  }
+  $("edBoard").innerHTML = `<div class="mb edb">${cells.join("")}</div>`;
+  const ok = edCasOk();
+  $("edCas").innerHTML = [["K", "alb O-O"], ["Q", "alb O-O-O"], ["k", "negru O-O"], ["q", "negru O-O-O"]].map(([k, l]) =>
+    `<label class="${ok[k] ? "" : "dis"}"><input type="checkbox" data-c="${k}" ${ED.cas[k] && ok[k] ? "checked" : ""} ${ok[k] ? "" : "disabled"}> ${l}</label>`).join("");
+  document.querySelector(`input[name="edTurn"][value="${ED.turn}"]`).checked = true;
+  if (document.activeElement !== $("edFen")) $("edFen").value = fen;
+  $("edErr").hidden = !prob; $("edErr").textContent = prob || "";
+  $("edAnalyze").disabled = !!prob; $("edPlay").disabled = !!prob || new Chess(prob ? START : fen).isGameOver();
+  document.querySelectorAll("#edModal .edt").forEach(b => b.onclick = () => { ED.tool = b.dataset.t; renderEditor(); });
+  $("edBoard").querySelectorAll(".sq").forEach(x => {
+    x.onclick = () => {
+      const sq = x.dataset.sq, cur = ED.g[sq];
+      if (ED.tool === "x" || (cur && cur.color + cur.type === ED.tool)) delete ED.g[sq];
+      else {
+        const c = ED.tool[0], t = ED.tool[1];
+        if (t === "k") for (const q of Object.keys(ED.g)) if (ED.g[q].type === "k" && ED.g[q].color === c) delete ED.g[q];   // one king per side: it moves
+        ED.g[sq] = {color:c, type:t};
+      }
+      renderEditor();
+    };
+    x.oncontextmenu = e => { e.preventDefault(); delete ED.g[x.dataset.sq]; renderEditor(); };
+  });
+  $("edCas").querySelectorAll("input").forEach(i => i.onchange = () => { ED.cas[i.dataset.c] = i.checked; renderEditor(); });
+}
+function openEditor(fen){
+  try { edFromFen(fen || curFen()); } catch { edFromFen(START); }
+  ED.flip = S.flip;
+  $("botModal").hidden = true; $("edModal").hidden = false; renderEditor();
+}
+document.querySelectorAll('input[name="edTurn"]').forEach(r => r.onchange = () => { ED.turn = r.value; renderEditor(); });
+$("edClose").onclick = () => $("edModal").hidden = true;
+$("edModal").addEventListener("click", e => { if (e.target.id === "edModal") $("edModal").hidden = true; });
+$("edStart").onclick = () => { edFromFen(START); renderEditor(); };
+$("edClear").onclick = () => { ED.g = {}; renderEditor(); };
+$("edFlip").onclick = () => { ED.flip = !ED.flip; renderEditor(); };
+$("edFen").oninput = e => { try { const f = e.target.value.trim(); const parts = f.split(/\s+/); const full = parts.length >= 6 ? f : [parts[0], parts[1] || "w", parts[2] || "-", parts[3] || "-", parts[4] || "0", parts[5] || "1"].join(" "); edFromFen(full); renderEditor(); } catch { $("edErr").hidden = false; $("edErr").textContent = "FEN-ul nu e valid."; } };
+function edLoad(){
+  const fen = edFen(); if (edProblem(fen)) return null;
+  const d = new Date();
+  const g = {headers:{Event:FREE_EVENT, Date:`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`, White:"Alb", Black:"Negru", Result:"*", SetUp:"1", FEN:fen},
+             moves:[], fens:[fen], clocks:[null], pgn:""};
+  g.pgn = gamePgn(g);
+  $("edModal").hidden = true;
+  loadGame(g, true);
+  if (S.flip !== ED.flip){ S.flip = ED.flip; buildBoard(); update(); }
+  return fen;
+}
+$("edAnalyze").onclick = () => { if (edLoad()) toast("Poziția ta e pe tablă. Muți tu pentru ambele părți."); };
+$("edPlay").onclick = () => { if (!edLoad()) return; startPlay(); engineTurn(); };
+
 const REP_BOT_TXT = {line:"Botul joacă liniile din repertoriu, ca să le exersezi.", mix:"Botul joacă de obicei liniile din repertoriu, dar uneori iese din teorie, ca un adversar real.", free:"Botul joacă deschiderea lui, ca un om. Vezi cât de des intri în liniile tale."};
 
 /* ---------- bot driver: talks to the engine and plays the brain's choice ---------- */
@@ -2439,9 +2578,10 @@ function stopPlay(){
 /* the game in progress is written to browser storage after every move, so a refresh never loses it */
 const BOT_EVENT = "Joc contra botului";
 function gamePgn(g){
-  const pg = new Chess();
+  const pg = new Chess(g.fens[0]);
   for (const m of g.moves) pg.move(m.san);
   for (const [k, v] of Object.entries(g.headers)) pg.header(k, v);
+  if (g.fens[0] !== START){ pg.header("SetUp", "1"); pg.header("FEN", g.fens[0]); }
   return pg.pgn();
 }
 function saveBotGame(){
@@ -2692,6 +2832,7 @@ function openBotModal(){
   $("botModal").hidden = false; setTimeout(() => $("botElo").focus(), 30);
 }
 $("bNew").onclick = openBotModal;
+$("botEditor").onclick = () => openEditor();
 $("botCancel").onclick = () => $("botModal").hidden = true;
 $("botModal").addEventListener("click", e => { if (e.target.id === "botModal") $("botModal").hidden = true; });
 $("botStart").onclick = () => {
